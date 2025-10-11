@@ -15,6 +15,7 @@ const showLeaderboardBtn = document.getElementById("showLeaderboardBtn");
 
 let score = 0, cards = [], flipped = [], playerName = "", seconds = 0;
 let timerInterval;
+let wrongMatches = 0; // Track wrong matches for penalty
 const ADMIN_SECRET = "RUSH2025"; // 🔐 Secret code
 
 function showSection(section) {
@@ -90,21 +91,69 @@ function flipCard(card) {
 }
 
 function checkMatch() {
+  const currentLevel = levelSelect.value;
+  let basePoints;
+  
+  // Different base points per level (harder = more points)
+  switch(currentLevel) {
+    case "easy": basePoints = 5; break;
+    case "medium": basePoints = 8; break;
+    case "hard": basePoints = 12; break;
+    case "expert": basePoints = 15; break;
+    case "legend": basePoints = 20; break;
+    default: basePoints = 5;
+  }
+  
   if(flipped[0].dataset.symbol===flipped[1].dataset.symbol){
-    score+=10;
+    // Correct match - add base points
+    score += basePoints;
     scoreDisplay.textContent = score;
     flipped=[];
+    
     if(document.querySelectorAll(".card:not(.flipped)").length===0){
       stopTimer();
-      saveScore();
+      
+      // Calculate final score with time bonus and penalties
+      const timeBonus = Math.max(0, 300 - seconds); // Bonus for finishing under 5 minutes
+      const penalty = wrongMatches * 2; // 2 points penalty per wrong match
+      const finalScore = score + timeBonus - penalty;
+      
+      // Calculate maximum possible score for this level
+      let maxPairs;
+      switch(currentLevel) {
+        case "easy": maxPairs = 4; break;
+        case "medium": maxPairs = 6; break;
+        case "hard": maxPairs = 8; break;
+        case "expert": maxPairs = 10; break;
+        case "legend": maxPairs = 12; break;
+        default: maxPairs = 4;
+      }
+      const maxScore = (maxPairs * basePoints) + 300; // Max match points + max time bonus
+      
+      // Show detailed score breakdown
       Swal.fire({
         title:"🎉 You Won!",
-        html:`Score: ${score}<br>Time: ${formatTime(seconds)}`,
+        html:`
+          <div style="text-align: left; line-height: 1.6;">
+            <strong>Match Points:</strong> ${score}<br>
+            <strong>Time Bonus:</strong> ${timeBonus} pts<br>
+            <strong>Wrong Matches:</strong> ${wrongMatches} (-${penalty} pts)<br>
+            <strong>Time Taken:</strong> ${formatTime(seconds)}<br>
+            <hr style="border: 1px solid #00e0ff; margin: 10px 0;">
+            <strong>Final Score: ${finalScore} / ${maxScore}</strong>
+          </div>
+        `,
         icon:"success",
-        confirmButtonColor:"#00e0ff"
+        confirmButtonColor:"#00e0ff",
+        width: 400
       }).then(()=>showLeaderboard());
+      
+      // Save the final score
+      saveScore(finalScore);
     }
   } else {
+    // Wrong match - add penalty
+    wrongMatches++;
     flipped.forEach(c=>{
       c.classList.remove("flipped");
       c.textContent="?";
@@ -118,10 +167,10 @@ function getLeaderboardKey(level) {
   return `memoryLeaderboard_${level}`;
 }
 
-function saveScore(){
+function saveScore(finalScore){
   const level = levelSelect.value;
-  console.log('[SAVE] Level:', level, 'Name:', playerName, 'Score:', score, 'Time:', seconds);
-  saveScoreOnline(level, playerName, score, seconds).then(() => {
+  console.log('[SAVE] Level:', level, 'Name:', playerName, 'Final Score:', finalScore, 'Time:', seconds);
+  saveScoreOnline(level, playerName, finalScore, seconds).then(() => {
     showLeaderboard(level);
   }).catch(error => {
     console.error('[SAVE] Error saving score:', error);
@@ -315,6 +364,7 @@ startBtn.onclick = ()=>{
   }).then(() => {
     // Start the game after the alert
     score = 0;
+    wrongMatches = 0; // Reset wrong matches counter
     scoreDisplay.textContent = score;
     showSection(game);
     createBoard(levelSelect.value);
