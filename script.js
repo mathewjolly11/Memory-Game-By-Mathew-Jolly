@@ -1,3 +1,23 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-analytics.js";
+import { getDatabase, ref, push, query, orderByChild, limitToLast, get, remove } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js";
+
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyBg2nNFgDw6f5YdaajOSTVtHNwgrlJ7TD4",
+  authDomain: "memory-game-992fa.firebaseapp.com",
+  projectId: "memory-game-992fa",
+  storageBucket: "memory-game-992fa.firebasestorage.app",
+  messagingSenderId: "283078183463",
+  appId: "1:283078183463:web:e87d66881e504c2d709c02",
+  measurementId: "G-84WYN73QN9"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+const db = getDatabase(app);
+
 const landing = document.getElementById("landing");
 const game = document.getElementById("game");
 const leaderboard = document.getElementById("leaderboard");
@@ -125,6 +145,27 @@ function saveScore(){
   updateLeaderboard();
 }
 
+// Firebase integration
+// Save score to Firebase
+function saveScoreOnline(level, name, score, time) {
+  push(ref(db, 'leaderboard/' + level), { name, score, time });
+}
+
+// Fetch leaderboard from Firebase
+async function fetchLeaderboard(level) {
+  const q = query(ref(db, 'leaderboard/' + level), orderByChild('score'), limitToLast(10));
+  const snapshot = await get(q);
+  const scores = [];
+  snapshot.forEach(child => scores.push(child.val()));
+  scores.reverse(); // highest first
+  return scores;
+}
+
+// Reset leaderboard in Firebase
+function resetLeaderboardOnline(level) {
+  remove(ref(db, 'leaderboard/' + level));
+}
+
 function updateLeaderboard(){
   const level = levelSelect.value;
   const key = getLeaderboardKey(level);
@@ -138,7 +179,23 @@ function updateLeaderboard(){
   });
 }
 
-function showLeaderboard(){ updateLeaderboard(); showSection(leaderboard); }
+function showLeaderboard(){ 
+  // Fetch from Firebase and update UI
+  const level = levelSelect.value;
+  fetchLeaderboard(level).then(scores => {
+    leaderboardList.innerHTML = "";
+    if(scores.length === 0) {
+      leaderboardList.innerHTML = "<li>No scores yet 😔</li>";
+    } else {
+      scores.forEach((p, i) => {
+        const li = document.createElement("li");
+        li.textContent = `${i+1}. ${p.name} — ${p.score} pts`;
+        leaderboardList.appendChild(li);
+      });
+    }
+  });
+  showSection(leaderboard); 
+}
 
 // Reset Leaderboard with SweetAlert
 function resetLeaderboard(){
@@ -157,6 +214,7 @@ function resetLeaderboard(){
       const level = levelSelect.value;
       const key = getLeaderboardKey(level);
       localStorage.removeItem(key);
+      resetLeaderboardOnline(level); // Reset in Firebase
       updateLeaderboard();
       Swal.fire({title:"✅ Leaderboard Reset!", icon:"success", timer:2000, showConfirmButton:false});
     }
