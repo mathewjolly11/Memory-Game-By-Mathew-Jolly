@@ -286,7 +286,20 @@ tabButtons.forEach(btn => {
 
 // Event Listeners
 startBtn.onclick = ()=>{
-  playerName = playerNameInput.value.trim()||"Player";
+  const nameInput = playerNameInput.value.trim();
+  if (!nameInput) {
+    Swal.fire({
+      title: "Name Required! 🎮",
+      text: "Please enter your name before starting the game",
+      icon: "warning",
+      confirmButtonColor: "#00e0ff",
+      confirmButtonText: "Got it!"
+    }).then(() => {
+      playerNameInput.focus();
+    });
+    return;
+  }
+  playerName = nameInput;
   score=0;
   scoreDisplay.textContent=score;
   showSection(game);
