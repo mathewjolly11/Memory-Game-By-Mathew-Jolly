@@ -212,7 +212,7 @@
   <section id="landing" class="active">
     <h1 class="title">🧠 Memory Quest</h1>
     <h1 class="main-title">Mathew's Memory Game</h1>
-    <input type="text" id="playerName" required placeholder="Enter your name" />
+    <input type="text" id="playerName" placeholder="Enter your name" />
     <button id="startBtn">Start Game</button>
     <button id="showLeaderboardBtn">Show Leaderboard</button>
   </section>
@@ -253,13 +253,11 @@
       <button class="tab-btn" data-level="legend">Legend</button>
     </div>
     <ol id="leaderboardList"></ol>
-    <button class="reset-btn" onclick="resetLeaderboard()">🔒 Reset Leaderboard</button>
-    <button onclick="showLanding()">🏠 Back to Home</button>
+    <button class="reset-btn" id="resetBtn">🔒 Reset Leaderboard</button>
+    <button id="leaderboardBackBtn">🏠 Back to Home</button>
   </section>
 
   <script type="module" src="script.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <footer style="width:100%;background:#141e30;padding:18px 0;position:relative;bottom:0;text-align:center;">
     <span style="color:#00e0ff;font-weight:500;font-size:1.1em;letter-spacing:1px;">Made with ❤️ by <a

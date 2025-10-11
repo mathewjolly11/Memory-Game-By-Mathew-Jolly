@@ -1,22 +1,5 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-analytics.js";
-import { getDatabase, ref, push, query, orderByChild, limitToLast, get, remove } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js";
-
-// Firebase config
-const firebaseConfig = {
-  apiKey: "AIzaSyBg2nNFgDw6f5YdaajOSTVtHNwgrlJ7TD4",
-  authDomain: "memory-game-992fa.firebaseapp.com",
-  projectId: "memory-game-992fa",
-  storageBucket: "memory-game-992fa.firebasestorage.app",
-  messagingSenderId: "283078183463",
-  appId: "1:283078183463:web:e87d66881e504c2d709c02",
-  measurementId: "G-84WYN73QN9"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-const db = getDatabase(app);
+// Google Sheets Web App URL - Replace with your actual URL
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbyYRlXFhiGdO2UkO9XiM9GryHvCKzyso09qBAdgH6dz5gb3E2sVNCdUNr22prJVfsh5/exec';
 
 const landing = document.getElementById("landing");
 const game = document.getElementById("game");
@@ -138,30 +121,81 @@ function getLeaderboardKey(level) {
 function saveScore(){
   const level = levelSelect.value;
   console.log('[SAVE] Level:', level, 'Name:', playerName, 'Score:', score, 'Time:', seconds);
-  saveScoreOnline(level, playerName, score, seconds);
-  showLeaderboard(level);
+  saveScoreOnline(level, playerName, score, seconds).then(() => {
+    showLeaderboard(level);
+  }).catch(error => {
+    console.error('[SAVE] Error saving score:', error);
+    // Fallback to showing leaderboard anyway
+    showLeaderboard(level);
+  });
 }
 
-// Firebase integration
-// Save score to Firebase
+// Google Sheets integration
+// Save score to Google Sheets
 function saveScoreOnline(level, name, score, time) {
-  push(ref(db, 'leaderboard/' + level), { name, score, time });
+  console.log('[SHEETS SAVE] Attempting to save:', { level, name, score, time });
+  const url = `${SHEETS_URL}?action=save&level=${encodeURIComponent(level)}&name=${encodeURIComponent(name)}&score=${score}&time=${time}`;
+  return fetch(url, { method: 'GET' })
+  .then(response => response.text())
+  .then(data => {
+    console.log('[SHEETS SAVE] Success:', data);
+    return data;
+  })
+  .catch(error => {
+    console.error('[SHEETS SAVE] Error:', error);
+    throw error;
+  });
 }
 
-// Fetch leaderboard from Firebase
+// Fetch leaderboard from Google Sheets
 async function fetchLeaderboard(level) {
   console.log('[FETCH] Level:', level);
-  const q = query(ref(db, 'leaderboard/' + level), orderByChild('score'), limitToLast(10));
-  const snapshot = await get(q);
-  const scores = [];
-  snapshot.forEach(child => scores.push(child.val()));
-  scores.reverse(); // highest first
-  return scores;
+  try {
+    const url = `${SHEETS_URL}?action=fetch&level=${encodeURIComponent(level)}`;
+    console.log('[FETCH] URL:', url);
+    const response = await fetch(url, { method: 'GET' });
+    
+    console.log('[FETCH] Response status:', response.status);
+    const text = await response.text();
+    console.log('[FETCH] Raw response:', text);
+    
+    let scores;
+    try {
+      scores = JSON.parse(text);
+      console.log('[FETCH] Parsed scores:', scores);
+    } catch (parseError) {
+      console.error('[FETCH] JSON parse error:', parseError);
+      return [];
+    }
+    
+    // Ensure scores is an array
+    if (!Array.isArray(scores)) {
+      console.error('[FETCH] Scores is not an array:', scores);
+      return [];
+    }
+    
+    console.log('[FETCH] Returning scores:', scores);
+    return scores;
+  } catch (error) {
+    console.error('[FETCH] Error:', error);
+    return [];
+  }
 }
 
-// Reset leaderboard in Firebase
+// Reset leaderboard in Google Sheets
 function resetLeaderboardOnline(level) {
-  remove(ref(db, 'leaderboard/' + level));
+  console.log('[RESET] Level:', level);
+  const url = `${SHEETS_URL}?action=reset&level=${encodeURIComponent(level)}`;
+  return fetch(url, { method: 'GET' })
+  .then(response => response.text())
+  .then(data => {
+    console.log('[RESET] Success:', data);
+    return data;
+  })
+  .catch(error => {
+    console.error('[RESET] Error:', error);
+    throw error;
+  });
 }
 
 function updateLeaderboard(){
@@ -178,13 +212,19 @@ function updateLeaderboard(){
 }
 
 function showLeaderboard(){ 
-  // Fetch from Firebase and update UI
+  // Fetch from Google Sheets and update UI
   let level = levelSelect.value;
   if (arguments.length > 0 && typeof arguments[0] === 'string') {
     level = arguments[0];
     levelSelect.value = level;
   }
+  console.log('[SHOW LEADERBOARD] Level:', level);
+  
+  // Show loading state
+  leaderboardList.innerHTML = "<li>Loading scores...</li>";
+  
   fetchLeaderboard(level).then(scores => {
+    console.log('[SHOW LEADERBOARD] Scores received:', scores);
     leaderboardList.innerHTML = "";
     if(scores.length === 0) {
       leaderboardList.innerHTML = "<li>No scores yet 😔</li>";
@@ -195,8 +235,17 @@ function showLeaderboard(){
         leaderboardList.appendChild(li);
       });
     }
+  }).catch(error => {
+    console.error('Error fetching leaderboard:', error);
+    leaderboardList.innerHTML = "<li>Error loading scores 😔</li>";
   });
+  
   showSection(leaderboard);
+  // Ensure tab button is active for correct level
+  tabButtons.forEach(b => {
+    if (b.dataset.level === level) b.classList.add('active');
+    else b.classList.remove('active');
+  });
 }
 
 // Reset Leaderboard with SweetAlert
@@ -211,14 +260,15 @@ function resetLeaderboard(){
     preConfirm:code=>{
       if(code!==ADMIN_SECRET) Swal.showValidationMessage("❌ Wrong code!"); else return true;
     }
-  }).then(result=>{
+  }).then(async result => {
     if(result.isConfirmed){
-      // Get level from active tab, not select
+      // Always get level from active tab
       let activeTab = document.querySelector('.tab-btn.active');
-      let level = activeTab ? activeTab.dataset.level : levelSelect.value;
+      let level = activeTab ? activeTab.dataset.level : 'easy';
+      levelSelect.value = level;
       console.log('[RESET] Level:', level);
-      resetLeaderboardOnline(level); // Reset in Firebase
-      showLeaderboard(level);
+      await resetLeaderboardOnline(level); // Reset in Firebase
+      await showLeaderboard(level);
       Swal.fire({title:"✅ Leaderboard Reset!", icon:"success", timer:2000, showConfirmButton:false});
     }
   });
@@ -231,11 +281,8 @@ tabButtons.forEach(btn => {
     const level = btn.dataset.level;
     levelSelect.value = level;
     showLeaderboard(level); // Always fetch correct leaderboard
-    tabButtons.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
   });
 });
-if(tabButtons.length) tabButtons[0].classList.add('active');
 
 // Event Listeners
 startBtn.onclick = ()=>{
@@ -251,16 +298,32 @@ backBtn.onclick = ()=>{ stopTimer(); showLanding(); };
 levelSelect.onchange = ()=>createBoard(levelSelect.value);
 if (showLeaderboardBtn) {
   showLeaderboardBtn.onclick = () => {
-    showLeaderboard();
-  };
-}
-// Add event listener for 'Back to Home' button in leaderboard section
-const leaderboardBackBtn = leaderboard.querySelector('button[onclick="showLanding()"]');
-if (leaderboardBackBtn) {
-  leaderboardBackBtn.onclick = () => {
-    showLanding();
+    // Set first tab as active and show its leaderboard
+    if(tabButtons.length) {
+      tabButtons.forEach(b => b.classList.remove('active'));
+      tabButtons[0].classList.add('active');
+      levelSelect.value = tabButtons[0].dataset.level;
+      showLeaderboard(tabButtons[0].dataset.level);
+    } else {
+      showLeaderboard();
+    }
   };
 }
 
-updateLeaderboard();
+// Add event listeners for leaderboard buttons
+const resetBtn = document.getElementById("resetBtn");
+if (resetBtn) {
+  resetBtn.onclick = resetLeaderboard;
+}
+
+const leaderboardBackBtn = document.getElementById("leaderboardBackBtn");
+if (leaderboardBackBtn) {
+  leaderboardBackBtn.onclick = showLanding;
+}
+
+// Initialize - show landing page and set first tab as active
+if(tabButtons.length) {
+  tabButtons[0].classList.add('active');
+  levelSelect.value = tabButtons[0].dataset.level;
+}
 showSection(landing);
