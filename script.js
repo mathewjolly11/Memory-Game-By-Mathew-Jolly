@@ -293,18 +293,49 @@ startBtn.onclick = ()=>{
       text: "Please enter your name before starting the game",
       icon: "warning",
       confirmButtonColor: "#00e0ff",
-      confirmButtonText: "Got it!"
+      confirmButtonText: "Got it!",
+      timer: 1000,
+      timerProgressBar: true
     }).then(() => {
       playerNameInput.focus();
     });
     return;
   }
   playerName = nameInput;
-  score=0;
-  scoreDisplay.textContent=score;
-  showSection(game);
-  createBoard(levelSelect.value);
-  startTimer();
+  
+  // Show game start message for 2 seconds
+  Swal.fire({
+    title: "Get Ready! 🎯",
+    text: `Good luck, ${playerName}! Match all the cards as fast as you can!`,
+    icon: "info",
+    confirmButtonColor: "#00e0ff",
+    timer: 1000,
+    timerProgressBar: true,
+    showConfirmButton: false
+  }).then(() => {
+    // Start the game after the alert
+    score = 0;
+    scoreDisplay.textContent = score;
+    showSection(game);
+    createBoard(levelSelect.value);
+    
+    // Show all cards for 2 seconds before starting
+    const allCards = document.querySelectorAll('.card');
+    allCards.forEach(card => {
+      card.classList.add('flipped');
+      card.textContent = card.dataset.symbol;
+    });
+    
+    setTimeout(() => {
+      // Hide all cards after 1 second
+      allCards.forEach(card => {
+        card.classList.remove('flipped');
+        card.textContent = '?';
+      });
+      // Start the timer after cards are hidden
+      startTimer();
+    }, 1000);
+  });
 };
 
 backBtn.onclick = ()=>{ stopTimer(); showLanding(); };
