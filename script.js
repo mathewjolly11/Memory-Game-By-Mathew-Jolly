@@ -137,8 +137,9 @@ function getLeaderboardKey(level) {
 
 function saveScore(){
   const level = levelSelect.value;
+  console.log('[SAVE] Level:', level, 'Name:', playerName, 'Score:', score, 'Time:', seconds);
   saveScoreOnline(level, playerName, score, seconds);
-  showLeaderboard();
+  showLeaderboard(level);
 }
 
 // Firebase integration
@@ -149,6 +150,7 @@ function saveScoreOnline(level, name, score, time) {
 
 // Fetch leaderboard from Firebase
 async function fetchLeaderboard(level) {
+  console.log('[FETCH] Level:', level);
   const q = query(ref(db, 'leaderboard/' + level), orderByChild('score'), limitToLast(10));
   const snapshot = await get(q);
   const scores = [];
@@ -211,10 +213,13 @@ function resetLeaderboard(){
     }
   }).then(result=>{
     if(result.isConfirmed){
-  const level = levelSelect.value;
-  resetLeaderboardOnline(level); // Reset in Firebase
-  showLeaderboard();
-  Swal.fire({title:"✅ Leaderboard Reset!", icon:"success", timer:2000, showConfirmButton:false});
+      // Get level from active tab, not select
+      let activeTab = document.querySelector('.tab-btn.active');
+      let level = activeTab ? activeTab.dataset.level : levelSelect.value;
+      console.log('[RESET] Level:', level);
+      resetLeaderboardOnline(level); // Reset in Firebase
+      showLeaderboard(level);
+      Swal.fire({title:"✅ Leaderboard Reset!", icon:"success", timer:2000, showConfirmButton:false});
     }
   });
 }
