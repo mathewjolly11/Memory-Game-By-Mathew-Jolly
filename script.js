@@ -137,12 +137,8 @@ function getLeaderboardKey(level) {
 
 function saveScore(){
   const level = levelSelect.value;
-  const key = getLeaderboardKey(level);
-  const data = JSON.parse(localStorage.getItem(key))||[];
-  data.push({name:playerName, score, time: seconds});
-  data.sort((a,b)=>b.score-a.score||a.time-b.time);
-  localStorage.setItem(key, JSON.stringify(data.slice(0,10)));
-  updateLeaderboard();
+  saveScoreOnline(level, playerName, score, seconds);
+  showLeaderboard();
 }
 
 // Firebase integration
@@ -211,12 +207,10 @@ function resetLeaderboard(){
     }
   }).then(result=>{
     if(result.isConfirmed){
-      const level = levelSelect.value;
-      const key = getLeaderboardKey(level);
-      localStorage.removeItem(key);
-      resetLeaderboardOnline(level); // Reset in Firebase
-      updateLeaderboard();
-      Swal.fire({title:"✅ Leaderboard Reset!", icon:"success", timer:2000, showConfirmButton:false});
+  const level = levelSelect.value;
+  resetLeaderboardOnline(level); // Reset in Firebase
+  showLeaderboard();
+  Swal.fire({title:"✅ Leaderboard Reset!", icon:"success", timer:2000, showConfirmButton:false});
     }
   });
 }
@@ -248,6 +242,13 @@ levelSelect.onchange = ()=>createBoard(levelSelect.value);
 if (showLeaderboardBtn) {
   showLeaderboardBtn.onclick = () => {
     showLeaderboard();
+  };
+}
+// Add event listener for 'Back to Home' button in leaderboard section
+const leaderboardBackBtn = leaderboard.querySelector('button[onclick="showLanding()"]');
+if (leaderboardBackBtn) {
+  leaderboardBackBtn.onclick = () => {
+    showLanding();
   };
 }
 
