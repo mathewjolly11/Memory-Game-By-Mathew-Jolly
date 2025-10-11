@@ -51,16 +51,26 @@ function createBoard(level) {
   }
   let symbols = ["🍎","🍌","🍇","🍒","🍉","🥝","🍋","🍑","🍓","🍍","🍈","🍏","🍐","🍊","🍔","🍕","🍦","🍩","🍪","🍫","🍿","🍭","🍬","🍯"].slice(0,pairs);
   cards = [...symbols, ...symbols].sort(() => 0.5 - Math.random());
-  // Add legend class for legend level
-  if(level === "legend") {
-    gameBoard.classList.add("legend");
+  // Add medium/expert/legend class for those levels
+  gameBoard.classList.remove("easy", "medium", "expert", "legend");
+  if(level === "easy") gameBoard.classList.add("easy");
+  if(level === "medium") gameBoard.classList.add("medium");
+  if(level === "expert") gameBoard.classList.add("expert");
+  if(level === "legend") gameBoard.classList.add("legend");
+  // Force 4 columns for expert/legend on mobile
+  if ((level === "expert" || level === "legend") && window.innerWidth <= 600) {
+    gameBoard.style.gridTemplateColumns = `repeat(4, 1fr)`;
   } else {
-    gameBoard.classList.remove("legend");
+    gameBoard.style.gridTemplateColumns = `repeat(${Math.ceil(Math.sqrt(pairs*2))}, 80px)`;
   }
-  gameBoard.style.gridTemplateColumns = `repeat(${Math.ceil(Math.sqrt(pairs*2))}, 80px)`;
   cards.forEach(sym => {
+    let cardClass = "card";
+    if(level === "easy") cardClass += " easy";
+    if(level === "medium") cardClass += " medium";
+    if(level === "expert") cardClass += " expert";
+    if(level === "legend") cardClass += " legend";
     const card = document.createElement("div");
-    card.className = "card" + (level === "legend" ? " legend" : "");
+    card.className = cardClass;
     card.textContent = "?";
     card.dataset.symbol = sym;
     card.addEventListener("click", ()=>flipCard(card));
