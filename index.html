@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,7 +10,8 @@
   <meta name="description" content="Mathew Jolly's Memory Game - Sharpen your mind and test your memory skills!" />
   <meta name="author" content="Mathew Jolly" />
   <meta property="og:title" content="Mathew Jolly's Memory Game" />
-  <meta property="og:description" content="Sharpen your mind and test your memory skills with Mathew Jolly's Memory Game." />
+  <meta property="og:description"
+    content="Sharpen your mind and test your memory skills with Mathew Jolly's Memory Game." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://mathewjolly.vercel.app" />
   <meta property="og:image" content="/memory.jpeg" />
@@ -18,6 +20,9 @@
   <meta property="og:image:type" content="image/jpeg" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "168f04813fd647c6987d086153f22092"}'></script><!-- End Cloudflare Web Analytics -->
   <style>
     body {
       font-family: 'Poppins', sans-serif;
@@ -36,7 +41,9 @@
       flex-direction: column;
     }
 
-    section.active { display: flex; }
+    section.active {
+      display: flex;
+    }
 
     h1.title {
       font-size: 3em;
@@ -121,7 +128,7 @@
     }
 
     #leaderboardList li {
-      background: rgba(255,255,255,0.1);
+      background: rgba(255, 255, 255, 0.1);
       margin: 5px 0;
       padding: 8px 12px;
       border-radius: 12px;
@@ -130,7 +137,7 @@
     }
 
     #leaderboardList li:hover {
-      background: rgba(255,255,255,0.2);
+      background: rgba(255, 255, 255, 0.2);
       transform: scale(1.03);
     }
 
@@ -198,6 +205,7 @@
     }
   </style>
 </head>
+
 <body>
 
   <!-- Landing Page -->
@@ -252,11 +260,15 @@
   <script src="script.js"></script>
 
   <footer style="width:100%;background:#141e30;padding:18px 0;position:relative;bottom:0;text-align:center;">
-    <span style="color:#00e0ff;font-weight:500;font-size:1.1em;letter-spacing:1px;">Made with ❤️ by <a href="https://mathewjolly.vercel.app" target="_blank" style="color:#00ff85;text-decoration:none;font-weight:600;">Mathew Jolly</a></span>
+    <span style="color:#00e0ff;font-weight:500;font-size:1.1em;letter-spacing:1px;">Made with ❤️ by <a
+        href="https://mathewjolly.vercel.app" target="_blank"
+        style="color:#00ff85;text-decoration:none;font-weight:600;">Mathew Jolly</a></span>
     <br>
     <span style="color:#b9e8ff;font-size:0.95em;">Memory Quest &copy; 2025 &mdash; All rights reserved.</span>
     <br>
-    <a href="https://mathewjolly.vercel.app" target="_blank" style="color:#00e0ff;text-decoration:underline;font-weight:600;">Mathew Jolly</a>
+    <a href="https://mathewjolly.vercel.app" target="_blank"
+      style="color:#00e0ff;text-decoration:underline;font-weight:600;">Mathew Jolly</a>
   </footer>
 </body>
+
 </html>
