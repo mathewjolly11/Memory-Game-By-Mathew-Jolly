@@ -226,7 +226,7 @@ const tabButtons = document.querySelectorAll('.tab-btn');
 tabButtons.forEach(btn => {
   btn.addEventListener('click', function() {
     levelSelect.value = btn.dataset.level;
-    updateLeaderboard();
+    showLeaderboard(); // Always fetch from Firebase
     tabButtons.forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
   });
