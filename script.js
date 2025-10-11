@@ -177,7 +177,11 @@ function updateLeaderboard(){
 
 function showLeaderboard(){ 
   // Fetch from Firebase and update UI
-  const level = levelSelect.value;
+  let level = levelSelect.value;
+  if (arguments.length > 0 && typeof arguments[0] === 'string') {
+    level = arguments[0];
+    levelSelect.value = level;
+  }
   fetchLeaderboard(level).then(scores => {
     leaderboardList.innerHTML = "";
     if(scores.length === 0) {
@@ -190,7 +194,7 @@ function showLeaderboard(){
       });
     }
   });
-  showSection(leaderboard); 
+  showSection(leaderboard);
 }
 
 // Reset Leaderboard with SweetAlert
@@ -219,8 +223,9 @@ function resetLeaderboard(){
 const tabButtons = document.querySelectorAll('.tab-btn');
 tabButtons.forEach(btn => {
   btn.addEventListener('click', function() {
-    levelSelect.value = btn.dataset.level;
-    showLeaderboard(); // Always fetch from Firebase
+    const level = btn.dataset.level;
+    levelSelect.value = level;
+    showLeaderboard(level); // Always fetch correct leaderboard
     tabButtons.forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
   });
