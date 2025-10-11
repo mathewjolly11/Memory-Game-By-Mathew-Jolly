@@ -309,7 +309,7 @@ startBtn.onclick = ()=>{
     text: `Good luck, ${playerName}! Match all the cards as fast as you can!`,
     icon: "info",
     confirmButtonColor: "#00e0ff",
-    timer: 1000,
+    timer: 2000,
     timerProgressBar: true,
     showConfirmButton: false
   }).then(() => {
